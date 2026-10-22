@@ -86,6 +86,8 @@ exec docker run --rm "${TTY_FLAGS[@]}" \
   --mmproj "/models/$MMPROJ_FILE" \
   -ngl 999 \
   -c "$CTX" \
+  -np 4 \
+  --kv-unified \
   -fa on \
   -ub 1024 \
   -b 1024 \
