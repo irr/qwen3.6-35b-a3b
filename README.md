@@ -5,6 +5,7 @@ One script to run [Qwen3.6-35B-A3B](https://huggingface.co/unsloth/Qwen3.6-35B-A
 - **Model:** Unsloth Dynamic `UD-Q5_K_M` GGUF (~26.5 GB)
 - **Vision:** image input through `mmproj-F16.gguf` (~0.9 GB)
 - **Context:** 262,144 tokens
+- **Concurrency:** 4 parallel requests sharing the full context
 - **API:** OpenAI-compatible, plus the llama.cpp web UI
 
 ## Requirements
@@ -72,11 +73,16 @@ PORT=9000 ./run.sh
 | ---------------- | -------------------------------------- |
 | GPU layers       | all (`-ngl 999`)                       |
 | Context          | 262144                                 |
+| Parallel slots   | 4 (`-np 4`), unified KV cache (`--kv-unified`) |
 | Flash attention  | on                                     |
 | Batch / ubatch   | 1024 / 1024                            |
 | Sampling         | temp 0.6, top-p 0.95, top-k 20, min-p 0 |
 
 The sampling values follow Qwen's recommendations for thinking mode. Change them in `run.sh` if you need different behaviour, or override them per request in the API call.
+
+### Parallel requests
+
+The server handles up to 4 requests at once. The slots share one 262,144-token KV cache, so a single request can use the full context, but all active requests together can't go past it. A 5th request waits until a slot frees up. To change the number of slots, edit `-np` in `run.sh`. Keep `--kv-unified`, or each slot gets only `262144 / N` tokens.
 
 ### MTP (multi-token prediction)
 
